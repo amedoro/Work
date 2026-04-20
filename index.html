@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Dashboard | HubSpot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --hs-orange: #FF7A59;
+      --bg-primary: #1a1f2e;
+      --bg-secondary: #242d3d;
+      --bg-card: #2d3748;
+      --bg-hover: #334155;
+      --border: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --danger: #f87171;
+      --danger-bg: rgba(248,113,113,0.08);
+      --warning: #fbbf24;
+      --success: #34d399;
+      --info: #60a5fa;
+      --purple: #a78bfa;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 34px; height: 34px;
+      background: var(--hs-orange);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 15px; color: white; letter-spacing: -1px;
+    }
+    .header-title { font-size: 17px; font-weight: 700; }
+    .header-sub { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+    .header-date { font-size: 12px; color: var(--text-muted); }
+
+    .main { padding: 24px 28px; max-width: 1440px; margin: 0 auto; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      border-top: 3px solid transparent;
+    }
+    .stat-card.total   { border-top-color: var(--hs-orange); }
+    .stat-card.overdue { border-top-color: var(--danger); }
+    .stat-card.week    { border-top-color: var(--warning); }
+    .stat-card.prog    { border-top-color: var(--info); }
+    .stat-card.ns      { border-top-color: var(--text-muted); }
+    .stat-label {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--text-secondary); margin-bottom: 10px;
+    }
+    .stat-value { font-size: 36px; font-weight: 800; line-height: 1; }
+    .stat-card.total   .stat-value { color: var(--hs-orange); }
+    .stat-card.overdue .stat-value { color: var(--danger); }
+    .stat-card.week    .stat-value { color: var(--warning); }
+    .stat-card.prog    .stat-value { color: var(--info); }
+    .stat-card.ns      .stat-value { color: var(--text-secondary); }
+    .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+
+    .filters-bar {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .filter-label { font-size: 12px; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
+    .filter-select, .search-input {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      padding: 7px 11px;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .filter-select:focus, .search-input:focus { border-color: var(--hs-orange); }
+    .filter-select option { background: var(--bg-card); }
+    .search-input { width: 210px; cursor: text; }
+    .search-input::placeholder { color: var(--text-muted); }
+    .vr { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+    .btn-reset {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 7px 12px; border-radius: 6px;
+      font-size: 12px; cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-reset:hover { border-color: var(--hs-orange); color: var(--hs-orange); }
+    .filter-count { margin-left: auto; font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+    .table-wrap {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .table-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .table-title { font-size: 14px; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--bg-card);
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--text-secondary);
+      cursor: pointer; user-select: none; white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+      transition: color .15s;
+    }
+    thead th:hover { color: var(--text-primary); }
+    thead th.sorted { color: var(--hs-orange); }
+    .sort-icon { margin-left: 4px; opacity: .4; }
+    thead th.sorted .sort-icon { opacity: 1; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg-hover); }
+    tbody tr.row-overdue { background: var(--danger-bg); border-left: 3px solid var(--danger); }
+    tbody tr.row-overdue:hover { background: rgba(248,113,113,0.13); }
+    td { padding: 12px 16px; font-size: 13px; vertical-align: middle; }
+    .task-name { font-weight: 500; }
+    .task-name.is-overdue { color: var(--danger); }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+    .b-todo     { background: rgba(148,163,184,.15); color: #94a3b8; }
+    .b-email    { background: rgba(96,165,250,.15);  color: #60a5fa; }
+    .b-call     { background: rgba(52,211,153,.15);  color: #34d399; }
+    .b-meeting  { background: rgba(167,139,250,.15); color: #a78bfa; }
+    .b-contract { background: rgba(251,191,36,.15);  color: #fbbf24; }
+
+    .assignee-cell { display: flex; align-items: center; gap: 9px; white-space: nowrap; }
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; flex-shrink: 0;
+    }
+    .av1 { background: #FF7A59; color: #fff; }
+    .av2 { background: #00BDA5; color: #fff; }
+    .av3 { background: #a78bfa; color: #fff; }
+    .av4 { background: #60a5fa; color: #fff; }
+    .av5 { background: #34d399; color: #1a1f2e; }
+    .av6 { background: #fbbf24; color: #1a1f2e; }
+    .a-name { font-size: 13px; font-weight: 500; }
+    .a-role { font-size: 11px; color: var(--text-muted); }
+
+    .due-cell { white-space: nowrap; }
+    .due-cell.is-overdue { color: var(--danger); font-weight: 600; }
+    .due-sub { font-size: 11px; display: block; margin-top: 1px; }
+    .due-sub.red    { color: var(--danger); }
+    .due-sub.yellow { color: var(--warning); }
+    .due-sub.muted  { color: var(--text-muted); }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; white-space: nowrap;
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .s-overdue    { background: rgba(248,113,113,.18); color: var(--danger); }
+    .s-overdue    .dot { background: var(--danger); }
+    .s-progress   { background: rgba(96,165,250,.18);  color: #60a5fa; }
+    .s-progress   .dot { background: #60a5fa; }
+    .s-notstarted { background: rgba(100,116,139,.18); color: var(--text-secondary); }
+    .s-notstarted .dot { background: var(--text-secondary); }
+
+    .sec-overdue td {
+      padding: 7px 16px;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--danger);
+      background: rgba(248,113,113,.06);
+      border-top: 1px solid rgba(248,113,113,.25);
+      border-bottom: 1px solid rgba(248,113,113,.25);
+    }
+    .sec-upcoming td {
+      padding: 7px 16px;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--info);
+      background: rgba(96,165,250,.04);
+      border-top: 1px solid rgba(96,165,250,.2);
+      border-bottom: 1px solid rgba(96,165,250,.2);
+    }
+    .empty { padding: 56px; text-align: center; color: var(--text-muted); }
+    .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+    @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .main { padding: 16px; } }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo">HS</div>
+    <div>
+      <div class="header-title">Task Dashboard</div>
+      <div class="header-sub">Open Tasks — All Representatives</div>
+    </div>
+  </div>
+  <div class="header-date">Last updated: April 20, 2026</div>
+</header>
+
+<main class="main">
+  <div class="stats-grid" id="statsGrid"></div>
+  <div class="filters-bar">
+    <span class="filter-label">Filter by:</span>
+    <select class="filter-select" id="fPerson"><option value="">All Reps</option></select>
+    <select class="filter-select" id="fType"><option value="">All Types</option></select>
+    <select class="filter-select" id="fStatus">
+      <option value="">All Statuses</option>
+      <option value="Overdue">Overdue</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Not Started">Not Started</option>
+    </select>
+    <div class="vr"></div>
+    <input class="search-input" id="fSearch" type="text" placeholder="Search tasks or accounts…">
+    <button class="btn-reset" id="btnReset">Clear Filters</button>
+    <span class="filter-count" id="fCount"></span>
+  </div>
+  <div class="table-wrap">
+    <div class="table-header"><div class="table-title">Open Tasks</div></div>
+    <table>
+      <thead><tr id="thead"></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">
+      <div class="empty-icon">📋</div>
+      <div>No tasks match your current filters.</div>
+    </div>
+  </div>
+</main>
+
+<script>
+const TODAY = new Date('2026-04-20');
+const people = [
+  { id:1, name:'Sarah Mitchell',   role:'Sales Manager',        initials:'SM' },
+  { id:2, name:'James Carter',     role:'Account Executive',    initials:'JC' },
+  { id:3, name:'Priya Patel',      role:'Account Executive',    initials:'PP' },
+  { id:4, name:'Marcus Rodriguez', role:'SDR',                  initials:'MR' },
+  { id:5, name:'Lisa Chen',        role:'Customer Success Mgr', initials:'LC' },
+  { id:6, name:'Tom Walsh',        role:'SDR',                  initials:'TW' },
+];
+const tasks = [
+  { id:1,  name:'Review Q2 sales pipeline',        type:'To-Do',           pid:1, object:'Acme Corp (Deal)',        due:'2026-04-01', status:'Overdue'     },
+  { id:2,  name:'Send proposal to client',          type:'Email',           pid:1, object:'TechVentures Inc',        due:'2026-04-08', status:'Overdue'     },
+  { id:3,  name:'Team performance review',          type:'Meeting',         pid:1, object:'Internal',                due:'2026-04-15', status:'Overdue'     },
+  { id:4,  name:'Update CRM deal stages',           type:'To-Do',           pid:1, object:'Multiple Deals',          due:'2026-04-25', status:'Not Started' },
+  { id:5,  name:'Quarterly forecast call',          type:'Follow-up Call',  pid:1, object:'VP of Sales',             due:'2026-05-01', status:'Not Started' },
+  { id:6,  name:'Review contract terms',            type:'Contract Review', pid:1, object:'GlobalTech Ltd',          due:'2026-05-10', status:'Not Started' },
+  { id:7,  name:'Follow up on demo',                type:'Follow-up Call',  pid:2, object:'DataStream Co',           due:'2026-03-28', status:'Overdue'     },
+  { id:8,  name:'Send pricing sheet',               type:'Email',           pid:2, object:'Nexus Solutions',         due:'2026-04-05', status:'Overdue'     },
+  { id:9,  name:'Close Q1 deal',                    type:'To-Do',           pid:2, object:'Omega Industries (Deal)', due:'2026-04-10', status:'Overdue'     },
+  { id:10, name:'Product demo prep',                type:'To-Do',           pid:2, object:'StartupHub',              due:'2026-04-22', status:'Not Started' },
+  { id:11, name:'Follow up after demo',             type:'Follow-up Call',  pid:2, object:'CloudBase Inc',           due:'2026-04-28', status:'Not Started' },
+  { id:12, name:'Contract negotiation meeting',     type:'Meeting',         pid:2, object:'Pinnacle Group',          due:'2026-05-05', status:'Not Started' },
+  { id:13, name:'Send case study',                  type:'Email',           pid:3, object:'Horizon Media',           due:'2026-04-03', status:'Overdue'     },
+  { id:14, name:'Discovery call follow-up',         type:'Follow-up Call',  pid:3, object:'BrightPath LLC',          due:'2026-04-09', status:'Overdue'     },
+  { id:15, name:'Proposal draft review',            type:'Contract Review', pid:3, object:'Summit Retail',           due:'2026-04-14', status:'Overdue'     },
+  { id:16, name:'New prospect outreach',            type:'Email',           pid:3, object:'Vertex Analytics',        due:'2026-04-23', status:'Not Started' },
+  { id:17, name:'Demo scheduling',                  type:'To-Do',           pid:3, object:'CoreTech Systems',        due:'2026-05-02', status:'Not Started' },
+  { id:18, name:'Renewal check-in',                 type:'Meeting',         pid:3, object:'LightWave Corp',          due:'2026-05-15', status:'Not Started' },
+  { id:19, name:'Cold outreach sequence',           type:'Email',           pid:4, object:'Multiple Contacts',       due:'2026-04-07', status:'Overdue'     },
+  { id:20, name:'LinkedIn follow-up',               type:'To-Do',           pid:4, object:'ProScale Inc',            due:'2026-04-12', status:'Overdue'     },
+  { id:21, name:'Book discovery calls',             type:'Follow-up Call',  pid:4, object:'NovaTech',                due:'2026-04-16', status:'Overdue'     },
+  { id:22, name:'Prospect research',                type:'To-Do',           pid:4, object:'Fortune 500 List',        due:'2026-04-24', status:'Not Started' },
+  { id:23, name:'Email sequence setup',             type:'Email',           pid:4, object:'New Territory Leads',     due:'2026-04-30', status:'Not Started' },
+  { id:24, name:'SDR training session',             type:'Meeting',         pid:4, object:'Internal',                due:'2026-05-08', status:'Not Started' },
+  { id:25, name:'Onboarding check-in',              type:'Follow-up Call',  pid:5, object:'Bluewave Analytics',      due:'2026-03-31', status:'Overdue'     },
+  { id:26, name:'QBR prep',                         type:'To-Do',           pid:5, object:'Keystone Enterprises',    due:'2026-04-05', status:'Overdue'     },
+  { id:27, name:'Health score review',              type:'To-Do',           pid:5, object:'Multiple Accounts',       due:'2026-04-10', status:'Overdue'     },
+  { id:28, name:'Renewal negotiation call',         type:'Follow-up Call',  pid:5, object:'Titan Corp',              due:'2026-04-21', status:'In Progress' },
+  { id:29, name:'Customer success plan update',     type:'To-Do',           pid:5, object:'Apex Innovations',        due:'2026-04-27', status:'Not Started' },
+  { id:30, name:'NPS survey follow-up',             type:'Email',           pid:5, object:'All Accounts Q1',         due:'2026-05-12', status:'Not Started' },
+  { id:31, name:'Initial outreach',                 type:'Email',           pid:6, object:'Target Account List',     due:'2026-03-20', status:'Overdue'     },
+  { id:32, name:'Follow-up call attempt',           type:'Follow-up Call',  pid:6, object:'Meridian Tech',           due:'2026-04-02', status:'Overdue'     },
+  { id:33, name:'Meeting booking',                  type:'To-Do',           pid:6, object:'GreenField Ventures',     due:'2026-04-13', status:'Overdue'     },
+  { id:34, name:'Sequence enrollment',              type:'Email',           pid:6, object:'New Leads Batch',         due:'2026-04-26', status:'Not Started' },
+  { id:35, name:'Discovery call',                   type:'Follow-up Call',  pid:6, object:'Cascade Software',        due:'2026-05-03', status:'Not Started' },
+  { id:36, name:'Competitive research',             type:'To-Do',           pid:6, object:'Market Analysis',         due:'2026-05-20', status:'Not Started' },
+];
+let sortCol='due', sortDir='asc';
+let filters={person:'',type:'',status:'',search:''};
+const getPerson=id=>people.find(p=>p.id===id);
+const daysDiff=d=>Math.round((new Date(d)-TODAY)/86400000);
+const fmtDate=d=>new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const TYPE_META={
+  'To-Do':{cls:'b-todo',icon:'✓'},
+  'Email':{cls:'b-email',icon:'✉'},
+  'Follow-up Call':{cls:'b-call',icon:'☎'},
+  'Meeting':{cls:'b-meeting',icon:'⬡'},
+  'Contract Review':{cls:'b-contract',icon:'⊞'},
+};
+function initFilters(){
+  const ps=document.getElementById('fPerson');
+  people.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;ps.appendChild(o);});
+  const ts=document.getElementById('fType');
+  [...new Set(tasks.map(t=>t.type))].sort().forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;ts.appendChild(o);});
+  ps.addEventListener('change',e=>{filters.person=e.target.value;render();});
+  document.getElementById('fType').addEventListener('change',e=>{filters.type=e.target.value;render();});
+  document.getElementById('fStatus').addEventListener('change',e=>{filters.status=e.target.value;render();});
+  document.getElementById('fSearch').addEventListener('input',e=>{filters.search=e.target.value.toLowerCase();render();});
+  document.getElementById('btnReset').addEventListener('click',()=>{
+    filters={person:'',type:'',status:'',search:''};
+    ['fPerson','fType','fStatus'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('fSearch').value='';
+    render();
+  });
+}
+function getFiltered(){
+  return tasks.filter(t=>{
+    if(filters.person&&t.pid!=filters.person)return false;
+    if(filters.type&&t.type!==filters.type)return false;
+    if(filters.status&&t.status!==filters.status)return false;
+    if(filters.search){const p=getPerson(t.pid);if(![t.name,t.object,t.type,p?.name,p?.role].join(' ').toLowerCase().includes(filters.search))return false;}
+    return true;
+  }).sort((a,b)=>{
+    let va,vb;
+    if(sortCol==='assignee'){va=getPerson(a.pid)?.name??'';vb=getPerson(b.pid)?.name??'';}
+    else if(sortCol==='due'){va=a.due;vb=b.due;}
+    else if(sortCol==='name'){va=a.name;vb=b.name;}
+    else if(sortCol==='type'){va=a.type;vb=b.type;}
+    else if(sortCol==='object'){va=a.object;vb=b.object;}
+    else if(sortCol==='status'){va=a.status;vb=b.status;}
+    else{va=a.due;vb=b.due;}
+    if(va<vb)return sortDir==='asc'?-1:1;
+    if(va>vb)return sortDir==='asc'?1:-1;
+    return 0;
+  });
+}
+function renderStats(list){
+  const wkEnd=new Date(TODAY);wkEnd.setDate(wkEnd.getDate()+7);
+  const overdue=list.filter(t=>t.status==='Overdue').length;
+  const inProgress=list.filter(t=>t.status==='In Progress').length;
+  const notStarted=list.filter(t=>t.status==='Not Started').length;
+  const thisWeek=list.filter(t=>{const d=new Date(t.due);return d>=TODAY&&d<=wkEnd&&t.status!=='Overdue';}).length;
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card total"><div class="stat-label">Total Open Tasks</div><div class="stat-value">${list.length}</div><div class="stat-sub">across all reps</div></div>
+    <div class="stat-card overdue"><div class="stat-label">Overdue &amp; Flagged</div><div class="stat-value">${overdue}</div><div class="stat-sub">require immediate attention</div></div>
+    <div class="stat-card week"><div class="stat-label">Due This Week</div><div class="stat-value">${thisWeek}</div><div class="stat-sub">next 7 days</div></div>
+    <div class="stat-card prog"><div class="stat-label">In Progress</div><div class="stat-value">${inProgress}</div><div class="stat-sub">currently active</div></div>
+    <div class="stat-card ns"><div class="stat-label">Not Started</div><div class="stat-value">${notStarted}</div><div class="stat-sub">awaiting action</div></div>`;
+}
+const COLS=[
+  {key:'name',label:'Task Name'},
+  {key:'type',label:'Type'},
+  {key:'assignee',label:'Assigned To'},
+  {key:'object',label:'Associated Object'},
+  {key:'due',label:'Due Date'},
+  {key:'status',label:'Status'},
+];
+function renderHead(){
+  document.getElementById('thead').innerHTML=COLS.map(c=>`<th class="${sortCol===c.key?'sorted':''}" data-col="${c.key}">${c.label}<span class="sort-icon">${sortCol===c.key?(sortDir==='asc'?'↑':'↓'):'↕'}</span></th>`).join('');
+  document.querySelectorAll('thead th').forEach(th=>th.addEventListener('click',()=>{
+    const col=th.dataset.col;
+    sortDir=sortCol===col?(sortDir==='asc'?'desc':'asc'):'asc';
+    sortCol=col;render();
+  }));
+}
+function rowHtml(t){
+  const p=getPerson(t.pid);
+  const days=daysDiff(t.due);
+  const isOD=t.status==='Overdue';
+  const meta=TYPE_META[t.type]||TYPE_META['To-Do'];
+  let dueSub='';
+  if(isOD)dueSub=`<span class="due-sub red">${Math.abs(days)} day${Math.abs(days)===1?'':'s'} overdue</span>`;
+  else if(days===0)dueSub=`<span class="due-sub yellow">Due today</span>`;
+  else if(days<=7)dueSub=`<span class="due-sub yellow">In ${days} day${days===1?'':'s'}</span>`;
+  else dueSub=`<span class="due-sub muted">In ${days} days</span>`;
+  let statusCls='s-notstarted';
+  if(t.status==='Overdue')statusCls='s-overdue';
+  if(t.status==='In Progress')statusCls='s-progress';
+  return `<tr class="${isOD?'row-overdue':''}">
+    <td><span class="task-name${isOD?' is-overdue':''}">${t.name}</span></td>
+    <td><span class="badge ${meta.cls}">${meta.icon} ${t.type}</span></td>
+    <td><div class="assignee-cell"><div class="avatar av${p.id}">${p.initials}</div><div><div class="a-name">${p.name}</div><div class="a-role">${p.role}</div></div></div></td>
+    <td style="color:var(--text-secondary);font-size:12px">${t.object}</td>
+    <td><span class="due-cell${isOD?' is-overdue':''}">${fmtDate(t.due)}${dueSub}</span></td>
+    <td><span class="status-badge ${statusCls}"><span class="dot"></span>${t.status}</span></td>
+  </tr>`;
+}
+function renderBody(list){
+  const empty=document.getElementById('empty');
+  const tbody=document.getElementById('tbody');
+  if(!list.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const od=list.filter(t=>t.status==='Overdue');
+  const rest=list.filter(t=>t.status!=='Overdue');
+  let html='';
+  if(od.length)html+=`<tr class="sec-overdue"><td colspan="6">⚑ Overdue &amp; Flagged — ${od.length} task${od.length===1?'':'s'}</td></tr>`+od.map(rowHtml).join('');
+  if(rest.length)html+=`<tr class="sec-upcoming"><td colspan="6">◷ Upcoming — ${rest.length} task${rest.length===1?'':'s'}</td></tr>`+rest.map(rowHtml).join('');
+  tbody.innerHTML=html;
+}
+function render(){
+  const list=getFiltered();
+  renderStats(list);
+  renderHead();
+  renderBody(list);
+  document.getElementById('fCount').textContent=`Showing ${list.length} of ${tasks.length} tasks`;
+}
+initFilters();
+render();
+</script>
+</body>
+</html>
