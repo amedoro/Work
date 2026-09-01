@@ -116,6 +116,13 @@
   td.capcell:hover{border-color:var(--accent2)}
   td.capcell.on{background:var(--accent);color:#04122b;border-color:var(--accent)}
 
+  /* Defense/Offense segmented toggle */
+  .segmented{display:inline-flex;border:1.5px solid var(--line2);border-radius:8px;overflow:hidden}
+  .segmented button{border:none;border-radius:0;margin:0;background:var(--panel);color:var(--muted);padding:8px 16px;font-family:var(--disp);text-transform:uppercase;letter-spacing:.05em;font-weight:700;font-size:12.5px}
+  .segmented button+button{border-left:1.5px solid var(--line2)}
+  .segmented button:hover{color:var(--chalk)}
+  .segmented button.active{background:var(--accent);color:#04122b}
+
   /* Diagram */
   .diagram{margin-top:6px}
   .fieldcard{background:linear-gradient(180deg,#16263f,#0a1120);border:1.5px solid var(--line2);border-radius:12px;padding:10px}
@@ -224,8 +231,14 @@
 
   <!-- Player positions / versatility key -->
   <div class="panel noprint">
-    <h2><span class="dot"></span>Player Positions <span style="font-family:var(--body);font-weight:400;font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0">— versatility key</span></h2>
-    <p class="hint">Tap the boxes to mark what each kid can play. This is their capability key, separate from who's starting, and it prints on the back of your charts.</p>
+    <div class="toggle-row" style="gap:12px;flex-wrap:wrap">
+      <h2 style="margin:0"><span class="dot"></span>Player Positions <span style="font-family:var(--body);font-weight:400;font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0">— versatility key</span></h2>
+      <div class="segmented" id="capSideToggle" style="margin-left:auto">
+        <button type="button" data-side="def">Defense</button>
+        <button type="button" data-side="off">Offense</button>
+      </div>
+    </div>
+    <p class="hint">Tap the boxes to mark what each kid can play. Flip between <b>Defense</b> and <b>Offense</b> to tag both sides. This is their capability key, separate from who's starting, and it prints on the back of your charts.</p>
     <div class="chartwrap">
       <table class="capmatrix" id="capBody"></table>
     </div>
@@ -392,13 +405,24 @@ const OFFENSE = {
 const OFFENSE_ORDER = ["proI","powerI","doubleTE","trips","spread"];
 
 /* ---------- Position groups for the versatility key ---------- */
-const POS_GROUPS = [
+const DEF_GROUPS = [
   {code:"DE", label:"Defensive End"},
   {code:"DT", label:"Defensive Tackle / Nose"},
   {code:"LB", label:"Linebacker"},
   {code:"CB", label:"Cornerback"},
   {code:"S",  label:"Safety"}
 ];
+const OFF_GROUPS = [
+  {code:"QB", label:"Quarterback"},
+  {code:"RB", label:"Running Back"},
+  {code:"G",  label:"Guard"},
+  {code:"T",  label:"Tackle"},
+  {code:"TE", label:"Tight End"},
+  {code:"WR", label:"Wide Receiver"}
+];
+/* combined list drives the stored ordering of each player's codes */
+const POS_GROUPS = [...DEF_GROUPS, ...OFF_GROUPS];
+const CAP_SIDES = { def:DEF_GROUPS, off:OFF_GROUPS };
 
 /* ---------- State ---------- */
 const LS_KEY = "cps_youth_def_depthchart_v1";
@@ -481,7 +505,8 @@ let state = {
   overrides:{},       // scheme -> { key -> [starter,b1,b2] }
   active:"m52",
   offense:"proI",
-  caps:{}             // playerName -> [group codes]
+  caps:{},            // playerName -> [group codes, offense + defense]
+  capSide:"def"       // which side the versatility key is showing: "def" | "off"
 };
 
 function load(){
@@ -495,6 +520,7 @@ function load(){
       state.active = SCHEMES[p.active]?p.active:"m52";
       state.offense = OFFENSE[p.offense]?p.offense:"proI";
       state.caps = p.caps || {};
+      state.capSide = (p.capSide==="off") ? "off" : "def";
     }else{
       applyTeamDefaults();   // first-time visitor: show the team's pre-loaded chart
     }
@@ -745,13 +771,19 @@ function renderDiagram(){
 
 function renderCaps(){
   const t = $("#capBody");
+  // reflect the active side on the Defense/Offense toggle
+  const tg = $("#capSideToggle");
+  if(tg) tg.querySelectorAll("button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.side===state.capSide);
+  });
   if(state.roster.length===0){
     t.innerHTML = `<tbody><tr><td class="empty" style="padding:10px">Add players in the Roster Manager to tag positions.</td></tr></tbody>`;
     return;
   }
-  const head = `<thead><tr><th>Player</th>${POS_GROUPS.map(g=>`<th title="${g.label}">${g.code}</th>`).join("")}</tr></thead>`;
+  const groups = CAP_SIDES[state.capSide] || DEF_GROUPS;
+  const head = `<thead><tr><th>Player</th>${groups.map(g=>`<th title="${g.label}">${g.code}</th>`).join("")}</tr></thead>`;
   const rows = state.roster.map(n=>{
-    const cells = POS_GROUPS.map(g=>{
+    const cells = groups.map(g=>{
       const on = hasCap(n,g.code);
       const nm = n.replace(/"/g,'&quot;');
       return `<td class="capcell${on?' on':''}" data-name="${nm}" data-code="${g.code}">${g.code}</td>`;
@@ -779,15 +811,19 @@ function chartTableHTML(scheme){
 }
 function capLegendHTML(){
   if(state.roster.length===0) return "";
+  const defCodes = new Set(DEF_GROUPS.map(g=>g.code));
+  const offCodes = new Set(OFF_GROUPS.map(g=>g.code));
   const rows = state.roster.map(n=>{
     const codes = state.caps[n]||[];
-    return `<tr><td class="pos">${n}</td><td>${codes.length?codes.join(", "):"—"}</td></tr>`;
+    const def = codes.filter(c=>defCodes.has(c));
+    const off = codes.filter(c=>offCodes.has(c));
+    return `<tr><td class="pos">${n}</td><td>${def.length?def.join(", "):"—"}</td><td>${off.length?off.join(", "):"—"}</td></tr>`;
   }).join("");
   return `
     <div class="ps-page">
       <div class="ps-head"><h2 class="ps-title">Player Positions &nbsp;<span style="font-size:13px;font-weight:400">Versatility Key</span></h2></div>
       <table class="ps">
-        <thead><tr><th>Player</th><th>Can Play (DE · DT · LB · CB · S)</th></tr></thead>
+        <thead><tr><th>Player</th><th>Defense (DE · DT · LB · CB · S)</th><th>Offense (QB · RB · G · T · TE · WR)</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
@@ -833,6 +869,11 @@ function init(){
     renderRoster(); renderChart(); renderDiagram(); renderCaps();
   };
   $("#clearBulk").onclick = ()=>{ $("#bulkNames").value=""; };
+
+  // Defense / Offense toggle on the versatility key
+  $("#capSideToggle").querySelectorAll("button").forEach(b=>{
+    b.onclick = ()=>{ state.capSide = b.dataset.side; save(); renderCaps(); };
+  });
   $("#addSingle").onclick = ()=>{
     const v = $("#singleName").value;
     if(v.trim()){ addNames([v]); $("#singleName").value=""; renderRoster(); renderChart(); renderDiagram(); renderCaps(); }
