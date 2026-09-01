@@ -236,6 +236,7 @@
     <div class="actions">
       <button class="primary" id="printOne">Print This Scheme</button>
       <button id="printAll">Print All 6 Units</button>
+      <button id="loadDefaults">Load Team Defaults</button>
       <button class="ghost" id="resetAssign">Reset Assignments</button>
     </div>
     <p class="hint" style="margin-top:12px">Print opens your browser's print dialog. Choose "Save as PDF" there if you want a file instead of paper.</p>
@@ -409,6 +410,39 @@ const DEFAULT_ROSTER = [
   "Albert Medoro","Destin Fields"
 ];
 const blankSlot = () => ["","",""];
+
+/* ---------- Team defaults (baked-in preload) ----------
+   Fill these in to ship a fully-populated chart to everyone who opens the page.
+   Anyone who then edits only changes THEIR OWN browser copy — the shared defaults
+   below are what every fresh visitor sees, and what the "Load Team Defaults"
+   button restores.
+     global    : position key -> [starter, backup1, backup2]
+                 (a key like "LE" carries into EVERY scheme that uses it)
+     overrides : scheme id -> { position key -> [starter, backup1, backup2] }
+                 (only where a scheme differs from the shared/global assignment)
+     caps      : "Player Name" -> ["DE","DT","LB","CB","S"]  (versatility grid)
+   Scheme ids: m52 (5-2), g63 (6-3), d53 (5-3), d44 (4-4), ko (kickoff), kr (kick return). */
+const TEAM_DEFAULTS = {
+  roster: DEFAULT_ROSTER.slice(),
+  global: {
+    // LE:["Dylan Alvaro","Jacob Lee",""],
+  },
+  overrides: {
+    // g63:{ NG:["Marcell Dean","",""] },
+  },
+  caps: {
+    // "Dylan Alvaro":["DE","LB"],
+  },
+  offense: "proI"
+};
+function applyTeamDefaults(){
+  state.roster    = (TEAM_DEFAULTS.roster||[]).slice().sort((a,b)=>a.localeCompare(b));
+  state.global    = JSON.parse(JSON.stringify(TEAM_DEFAULTS.global||{}));
+  state.overrides = JSON.parse(JSON.stringify(TEAM_DEFAULTS.overrides||{}));
+  state.caps      = JSON.parse(JSON.stringify(TEAM_DEFAULTS.caps||{}));
+  state.offense   = OFFENSE[TEAM_DEFAULTS.offense] ? TEAM_DEFAULTS.offense : "proI";
+}
+
 let state = {
   roster:[],
   global:{},          // key -> [starter,b1,b2]
@@ -430,11 +464,11 @@ function load(){
       state.offense = OFFENSE[p.offense]?p.offense:"proI";
       state.caps = p.caps || {};
     }else{
-      state.roster = DEFAULT_ROSTER.slice().sort((a,b)=>a.localeCompare(b));
+      applyTeamDefaults();   // first-time visitor: show the team's pre-loaded chart
     }
   }catch(e){
     console.warn("load failed",e);
-    state.roster = DEFAULT_ROSTER.slice().sort((a,b)=>a.localeCompare(b));
+    applyTeamDefaults();
   }
 }
 function save(){
@@ -787,6 +821,11 @@ function init(){
 
   $("#printOne").onclick = ()=>doPrint([state.active]);
   $("#printAll").onclick = ()=>doPrint(SCHEME_ORDER);
+  $("#loadDefaults").onclick = ()=>{
+    if(confirm("Load the team's default roster, assignments, and positions? This replaces what's currently on this device.")){
+      applyTeamDefaults(); save(); renderAll();
+    }
+  };
   $("#resetAssign").onclick = ()=>{
     if(confirm("Clear every player assignment across all schemes? Roster is kept.")){
       state.global={}; state.overrides={}; save(); renderChart(); renderDiagram();

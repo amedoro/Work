@@ -1,0 +1,17 @@
+# Netlify configuration — static single-page deploy, no build step.
+[build]
+  publish = "."
+
+# The chart is the site's home page.
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+# Don't let browsers cache the HTML, so a fresh deploy (updated team
+# defaults) is picked up on next visit. Player edits live in localStorage,
+# not the HTML, so they're unaffected.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
