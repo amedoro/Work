@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Depth Chart">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0d14">
+<title>Defensive Depth Chart</title>
+<style>
+  :root{
+    --field:#0a0d14;
+    --field2:#05070c;
+    --panel:#111621;
+    --panel2:#1a2233;
+    --chalk:#f4f7ff;
+    --muted:#8ea3c4;
+    --line:rgba(244,247,255,.14);
+    --line2:rgba(244,247,255,.28);
+    --accent:#1a82ff;
+    --accent2:#6db4ff;
+    --warn:#ffb020;
+    --disp:'Oswald','Arial Narrow','Helvetica Neue Condensed','HelveticaNeue-CondensedBold','Franklin Gothic Medium',sans-serif;
+    --body:'Trebuchet MS','Segoe UI',Tahoma,Verdana,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:var(--body);
+    color:var(--chalk);
+    background:
+      repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),var(--line) calc(10% - 1px) 10%),
+      radial-gradient(120% 90% at 50% -10%,#16263f 0%,var(--field) 45%,var(--field2) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    padding:22px 16px 60px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+
+  /* Header */
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:2px solid var(--line2);padding-bottom:16px;margin-bottom:18px}
+  .badge{width:46px;height:46px;flex:0 0 auto;display:grid;place-items:center;border:2px solid var(--accent);border-radius:10px;background:rgba(26,130,255,.10)}
+  h1{font-family:var(--disp);text-transform:uppercase;letter-spacing:.06em;font-weight:700;font-size:30px;margin:0;line-height:1}
+  h1 span{color:var(--accent)}
+  .sub{color:var(--muted);font-size:12.5px;margin-top:4px;letter-spacing:.02em}
+
+  /* Scheme tabs */
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+  .tab{
+    font-family:var(--disp);text-transform:uppercase;letter-spacing:.05em;font-weight:700;font-size:14px;
+    color:var(--chalk);background:var(--panel);border:1.5px solid var(--line2);border-radius:8px;
+    padding:11px 16px;cursor:pointer;transition:.12s;flex:1 1 auto;min-width:150px;text-align:center;
+  }
+  .tab small{display:block;font-family:var(--body);font-weight:400;letter-spacing:0;font-size:10.5px;color:var(--muted);text-transform:none;margin-top:3px}
+  .tab:hover{border-color:var(--accent2)}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#04122b}
+  .tab.active small{color:rgba(4,18,43,.7)}
+
+  /* Panels */
+  .panel{background:var(--panel);border:1.5px solid var(--line2);border-radius:12px;padding:16px 16px 6px;margin-bottom:16px}
+  .panel h2{font-family:var(--disp);text-transform:uppercase;letter-spacing:.05em;font-size:16px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .panel h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+  .hint{color:var(--muted);font-size:12px;margin:0 0 12px}
+
+  /* Roster manager */
+  details.roster{margin-bottom:16px}
+  details.roster>summary{
+    list-style:none;cursor:pointer;background:var(--panel);border:1.5px solid var(--line2);border-radius:10px;
+    padding:12px 14px;font-family:var(--disp);text-transform:uppercase;letter-spacing:.05em;font-size:15px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  details.roster>summary::-webkit-details-marker{display:none}
+  .rcount{font-family:var(--body);font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0}
+  .rbody{border:1.5px solid var(--line2);border-top:none;border-radius:0 0 10px 10px;padding:14px;background:var(--panel)}
+  textarea{width:100%;min-height:84px;resize:vertical;background:var(--field2);color:var(--chalk);border:1px solid var(--line2);border-radius:8px;padding:10px;font-family:var(--body);font-size:13.5px}
+  .rrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  input[type=text]{flex:1 1 200px;background:var(--field2);color:var(--chalk);border:1px solid var(--line2);border-radius:8px;padding:9px 10px;font-family:var(--body);font-size:13.5px}
+  button{font-family:var(--disp);text-transform:uppercase;letter-spacing:.04em;font-weight:700;font-size:12.5px;cursor:pointer;border-radius:8px;padding:9px 14px;border:1.5px solid var(--line2);background:var(--panel2);color:var(--chalk);transition:.12s}
+  button:hover{border-color:var(--accent2)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#04122b}
+  button.ghost{background:transparent}
+  button.danger{color:#ffb4a0;border-color:rgba(255,120,90,.4)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--field2);border:1px solid var(--line2);border-radius:20px;padding:5px 6px 5px 12px;font-size:13px}
+  .chip b{font-weight:600}
+  .chip .x{cursor:pointer;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);color:var(--muted);font-size:13px;line-height:1}
+  .chip .x:hover{background:var(--accent);color:#04122b}
+  .empty{color:var(--muted);font-size:13px;font-style:italic}
+
+  /* Depth chart table */
+  .chartwrap{overflow-x:auto}
+  table.chart{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.chart th{font-family:var(--disp);text-transform:uppercase;letter-spacing:.05em;font-size:12px;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line2);white-space:nowrap}
+  table.chart td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .poscell{font-family:var(--disp);text-transform:uppercase;letter-spacing:.03em;font-size:13.5px;white-space:nowrap}
+  .poscell .abbr{display:inline-block;min-width:34px;color:var(--accent);font-weight:700}
+  select{width:100%;min-width:130px;background:var(--field2);color:var(--chalk);border:1px solid var(--line2);border-radius:7px;padding:7px 8px;font-family:var(--body);font-size:13px}
+  td.starter select{border-color:rgba(109,180,255,.55)}
+  .lockcell{text-align:center;white-space:nowrap}
+  .lock{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--muted);user-select:none}
+  .lock input{accent-color:var(--accent);width:15px;height:15px}
+  tr.locked td{background:rgba(26,130,255,.08)}
+  tr.locked .poscell .abbr{color:var(--accent2)}
+  .conflict{outline:2px solid var(--warn);border-radius:7px}
+  .conflict-note{color:var(--warn);font-size:11px;margin:8px 2px 0}
+
+  /* Capability matrix */
+  table.capmatrix{width:100%;border-collapse:separate;border-spacing:4px 3px;font-size:13px}
+  table.capmatrix th{font-family:var(--disp);text-transform:uppercase;letter-spacing:.04em;font-size:11px;color:var(--muted);padding:4px 6px;text-align:center}
+  table.capmatrix th:first-child{text-align:left}
+  table.capmatrix td.capname{white-space:nowrap;font-size:13px;padding:4px 6px}
+  td.capcell{width:48px;text-align:center;cursor:pointer;font-family:var(--disp);font-weight:700;font-size:12px;color:var(--muted);background:var(--field2);border:1px solid var(--line2);border-radius:7px;padding:7px 0;user-select:none;transition:.1s}
+  td.capcell:hover{border-color:var(--accent2)}
+  td.capcell.on{background:var(--accent);color:#04122b;border-color:var(--accent)}
+
+  /* Diagram */
+  .diagram{margin-top:6px}
+  .fieldcard{background:linear-gradient(180deg,#16263f,#0a1120);border:1.5px solid var(--line2);border-radius:12px;padding:10px}
+  svg.field{width:100%;height:auto;display:block}
+  .toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+
+  /* Actions */
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+
+  /* Print sheet (hidden on screen) */
+  #printSheet{display:none}
+
+  @media print{
+    @page{margin:12mm}
+    body{background:#fff;color:#111;padding:0}
+    .wrap{max-width:none}
+    .noprint{display:none !important}
+    #printSheet{display:block}
+    .ps-page{page-break-after:always}
+    .ps-page:last-child{page-break-after:auto}
+    .ps-head{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
+    .ps-title{font-family:var(--disp);text-transform:uppercase;letter-spacing:.05em;font-size:24px;margin:0}
+    .ps-meta{display:flex;gap:26px;margin-top:8px;font-size:13px}
+    .ps-meta span{border-bottom:1px solid #111;flex:1;padding-bottom:2px}
+    table.ps{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:14px}
+    table.ps th{background:#111;color:#fff;text-align:left;padding:6px 8px;font-family:var(--disp);text-transform:uppercase;letter-spacing:.04em;font-size:11px}
+    table.ps td{border:1px solid #999;padding:6px 8px}
+    table.ps td.pos{font-weight:700;white-space:nowrap;width:150px}
+    table.ps tr:nth-child(even) td{background:#f3f3f3}
+    .ps-field{border:1.5px solid #111;border-radius:8px;padding:8px;margin-top:6px}
+    .ps-field svg{width:100%;height:auto}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top noprint">
+    <div class="badge" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a82ff" stroke-width="1.8">
+        <ellipse cx="12" cy="12" rx="9.5" ry="6" transform="rotate(-30 12 12)"/>
+        <path d="M8.5 15.5 15.5 8.5M9.7 13.2l1.3 1.3M10.9 11.9l1.3 1.3M12.1 10.7l1.3 1.3M13.3 9.5l1.3 1.3" stroke-width="1.3"/>
+      </svg>
+    </div>
+    <div style="flex:1 1 auto">
+      <h1>Defensive <span>Depth Chart</span></h1>
+      <div class="sub">Pick a scheme, plug in your players. Assignments carry across schemes by position, with a per-spot override. Everything saves in this browser.</div>
+    </div>
+  </header>
+
+  <!-- Roster manager -->
+  <details class="roster noprint" id="rosterBox">
+    <summary>
+      <span>Roster Manager</span>
+      <span class="rcount" id="rosterCount">0 players</span>
+    </summary>
+    <div class="rbody">
+      <div class="hint">Paste the whole squad below (one name per line, or comma-separated), then Load. You only do this once per season.</div>
+      <textarea id="bulkNames" placeholder="Jackson Miller&#10;Cole Reyes&#10;Aiden Fox&#10;..."></textarea>
+      <div class="rrow">
+        <button class="primary" id="loadBulk">Load Names</button>
+        <button class="ghost" id="clearBulk">Clear Box</button>
+      </div>
+      <div class="rrow" style="margin-top:14px">
+        <input type="text" id="singleName" placeholder="Add one player…">
+        <button id="addSingle">Add</button>
+        <button class="danger ghost" id="wipeRoster" style="margin-left:auto">Remove All</button>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </details>
+
+  <!-- Scheme tabs -->
+  <div class="tabs noprint" id="tabs"></div>
+
+  <!-- Depth chart -->
+  <div class="panel noprint">
+    <h2><span class="dot"></span><span id="schemeTitle">Scheme</span></h2>
+    <p class="hint" id="schemeHint"></p>
+    <div class="chartwrap">
+      <table class="chart">
+        <thead>
+          <tr>
+            <th style="width:150px">Position</th>
+            <th>Starter</th>
+            <th>Backup 1</th>
+            <th>Backup 2</th>
+            <th style="width:120px;text-align:center">Override</th>
+          </tr>
+        </thead>
+        <tbody id="chartBody"></tbody>
+      </table>
+    </div>
+    <div class="conflict-note" id="conflictNote" style="display:none"></div>
+  </div>
+
+  <!-- Field diagram -->
+  <div class="panel noprint diagram">
+    <div class="toggle-row">
+      <h2 style="margin:0"><span class="dot"></span>Alignment</h2>
+      <label class="lock" id="offenseWrap" style="margin-left:auto;gap:8px">Offense
+        <select id="offenseSel" style="width:auto;min-width:118px"></select>
+      </label>
+      <label class="lock"><input type="checkbox" id="showDiagram" checked> Show diagram</label>
+    </div>
+    <div class="fieldcard" id="diagramCard"></div>
+  </div>
+
+  <!-- Player positions / versatility key -->
+  <div class="panel noprint">
+    <h2><span class="dot"></span>Player Positions <span style="font-family:var(--body);font-weight:400;font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0">— versatility key</span></h2>
+    <p class="hint">Tap the boxes to mark what each kid can play. This is their capability key, separate from who's starting, and it prints on the back of your charts.</p>
+    <div class="chartwrap">
+      <table class="capmatrix" id="capBody"></table>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="panel noprint">
+    <div class="actions">
+      <button class="primary" id="printOne">Print This Scheme</button>
+      <button id="printAll">Print All 6 Units</button>
+      <button class="ghost" id="resetAssign">Reset Assignments</button>
+    </div>
+    <p class="hint" style="margin-top:12px">Print opens your browser's print dialog. Choose "Save as PDF" there if you want a file instead of paper.</p>
+  </div>
+
+</div>
+
+<!-- Print target -->
+<div id="printSheet"></div>
+
+<script>
+"use strict";
+
+/* ---------- Scheme definitions ---------- */
+/* key = canonical position identity (drives auto-carry across schemes)
+   label = scheme-specific display name
+   x/y = diagram coordinates in a 0-100 (x) by 0-70 (y) field space; y is depth from top */
+const SCHEMES = {
+  m52:{
+    name:"Monster 5-2",
+    tag:"5 down · 2 LB · Monster",
+    hint:"Odd front with a nose, two inside backers, and a Monster (rover) to the strength. Base run-stopping defense.",
+    pos:[
+      {key:"LE", label:"Left End",     x:15, y:14},
+      {key:"LT", label:"Left Tackle",  x:33, y:14},
+      {key:"NG", label:"Nose Guard",   x:50, y:14},
+      {key:"RT", label:"Right Tackle", x:67, y:14},
+      {key:"RE", label:"Right End",    x:85, y:14},
+      {key:"LLB",label:"Left LB",      x:39, y:31},
+      {key:"RLB",label:"Right LB",     x:61, y:31},
+      {key:"M",  label:"Monster",      x:74, y:35},
+      {key:"LCB",label:"Left Corner",  x:10, y:48},
+      {key:"RCB",label:"Right Corner", x:90, y:48},
+      {key:"FS", label:"Safety",       x:50, y:62}
+    ]
+  },
+  g63:{
+    name:"6-3 Goal Line",
+    tag:"6 down · 3 LB · 2 CB",
+    hint:"Six on the line, three backers stacked tight, two corners. Short-yardage and goal-line wall.",
+    pos:[
+      {key:"LE", label:"Left End",     x:11, y:14},
+      {key:"LT", label:"Left Tackle",  x:29, y:14},
+      {key:"LG", label:"Left Guard",   x:42, y:14},
+      {key:"RG", label:"Right Guard",  x:58, y:14},
+      {key:"RT", label:"Right Tackle", x:71, y:14},
+      {key:"RE", label:"Right End",    x:89, y:14},
+      {key:"LLB",label:"Left LB",      x:31, y:29},
+      {key:"MLB",label:"Mike LB",      x:50, y:29},
+      {key:"RLB",label:"Right LB",     x:69, y:29},
+      {key:"LCB",label:"Left Corner",  x:14, y:42},
+      {key:"RCB",label:"Right Corner", x:86, y:42}
+    ]
+  },
+  d53:{
+    name:"5-3 Defense",
+    tag:"5 down · 3 LB · 3 DB",
+    hint:"Odd front with three linebackers and three deep. More coverage flexibility than the 5-2 against spread looks.",
+    pos:[
+      {key:"LE", label:"Left End",     x:15, y:14},
+      {key:"LT", label:"Left Tackle",  x:33, y:14},
+      {key:"NG", label:"Nose Guard",   x:50, y:14},
+      {key:"RT", label:"Right Tackle", x:67, y:14},
+      {key:"RE", label:"Right End",    x:85, y:14},
+      {key:"LLB",label:"Left LB",      x:31, y:30},
+      {key:"MLB",label:"Mike LB",      x:50, y:30},
+      {key:"RLB",label:"Right LB",     x:69, y:30},
+      {key:"LCB",label:"Left Corner",  x:12, y:46},
+      {key:"RCB",label:"Right Corner", x:88, y:46},
+      {key:"FS", label:"Safety",       x:50, y:62}
+    ]
+  },
+  d44:{
+    name:"4-4 Defense",
+    tag:"4 down · 4 LB · FS",
+    hint:"Four down linemen, four linebackers (two OLB, Mike and Will inside), corners outside with a single free safety. Balanced, run-first eight-in-the-box front.",
+    pos:[
+      {key:"LE",  abbr:"DE", label:"Left DE",     x:20, y:14},
+      {key:"LT",  abbr:"DT", label:"Left DT",     x:40, y:14},
+      {key:"RT",  abbr:"DT", label:"Right DT",    x:60, y:14},
+      {key:"RE",  abbr:"DE", label:"Right DE",    x:80, y:14},
+      {key:"LOLB",abbr:"OLB",label:"Left OLB",    x:9,  y:31},
+      {key:"MLB", abbr:"M",  label:"Mike",        x:38, y:31},
+      {key:"RLB", abbr:"W",  label:"Will",        x:60, y:31},
+      {key:"ROLB",abbr:"OLB",label:"Right OLB",   x:91, y:31},
+      {key:"LCB", abbr:"CB", label:"Left Corner", x:8,  y:48},
+      {key:"RCB", abbr:"CB", label:"Right Corner",x:92, y:48},
+      {key:"FS",  abbr:"FS", label:"Free Safety", x:50, y:62}
+    ]
+  },
+  ko:{
+    name:"Kickoff",
+    tag:"Coverage team · 11",
+    type:"st",
+    guideY:24,
+    hint:"Kick coverage. Kicker in the middle, five to each side spread across the field. L5 and R5 are your contain men on the sideline; stay in your lanes.",
+    pos:[
+      {key:"KO_L5", abbr:"L5", label:"Left 5 (contain)", x:6,  y:28},
+      {key:"KO_L4", abbr:"L4", label:"Left 4",           x:15, y:28},
+      {key:"KO_L3", abbr:"L3", label:"Left 3",           x:25, y:28},
+      {key:"KO_L2", abbr:"L2", label:"Left 2",           x:34, y:28},
+      {key:"KO_L1", abbr:"L1", label:"Left 1",           x:42, y:28},
+      {key:"KO_K",  abbr:"K",  label:"Kicker",           x:50, y:40},
+      {key:"KO_R1", abbr:"R1", label:"Right 1",          x:58, y:28},
+      {key:"KO_R2", abbr:"R2", label:"Right 2",          x:66, y:28},
+      {key:"KO_R3", abbr:"R3", label:"Right 3",          x:75, y:28},
+      {key:"KO_R4", abbr:"R4", label:"Right 4",          x:85, y:28},
+      {key:"KO_R5", abbr:"R5", label:"Right 5 (contain)",x:94, y:28}
+    ]
+  },
+  kr:{
+    name:"Kick Return",
+    tag:"Return team · 11",
+    type:"st",
+    guideY:16,
+    hint:"Return unit. Front line meets the coverage, mid wall sets up the wedge, and the deep returner brings it out. Everyone blocks their man and walls to one side.",
+    pos:[
+      {key:"KR_F1", abbr:"F1", label:"Front 1", x:15, y:24},
+      {key:"KR_F2", abbr:"F2", label:"Front 2", x:32, y:24},
+      {key:"KR_F3", abbr:"F3", label:"Front 3", x:50, y:24},
+      {key:"KR_F4", abbr:"F4", label:"Front 4", x:68, y:24},
+      {key:"KR_F5", abbr:"F5", label:"Front 5", x:85, y:24},
+      {key:"KR_M1", abbr:"M1", label:"Mid 1",   x:28, y:42},
+      {key:"KR_M2", abbr:"M2", label:"Mid 2",   x:50, y:42},
+      {key:"KR_M3", abbr:"M3", label:"Mid 3",   x:72, y:42},
+      {key:"KR_U1", abbr:"U1", label:"Setup 1", x:40, y:56},
+      {key:"KR_U2", abbr:"U2", label:"Setup 2", x:60, y:56},
+      {key:"KR_KR", abbr:"KR", label:"Returner",x:50, y:70}
+    ]
+  }
+};
+const SCHEME_ORDER = ["m52","g63","d53","d44","ko","kr"];
+
+/* ---------- Offensive formations (diagram look only, no names) ---------- */
+/* Offense is drawn above the LOS. Center is always a square; everyone else a circle. */
+const OL = [
+  {x:50, y:6.5, sq:true, t:"C"},   // Center (square)
+  {x:41, y:6.5, t:"G"}, {x:59, y:6.5, t:"G"},   // Guards
+  {x:32, y:6.5, t:"T"}, {x:68, y:6.5, t:"T"}     // Tackles
+];
+/* O-line gaps, center out: A (C-G), B (G-T), C (off-tackle) each side */
+const GAPS = [
+  {x:26, t:"C"}, {x:36.5, t:"B"}, {x:45.5, t:"A"},
+  {x:54.5, t:"A"}, {x:63.5, t:"B"}, {x:74, t:"C"}
+];
+const OFFENSE = {
+  proI:    { name:"Pro I",     skill:[ {x:50,y:1,t:"QB"},{x:50,y:-4,t:"FB"},{x:50,y:-9,t:"RB"},{x:76,y:6.5,t:"TE"},{x:12,y:6.5,t:"WR"},{x:90,y:4,t:"WR"} ] },
+  powerI:  { name:"Power I",   skill:[ {x:50,y:1,t:"QB"},{x:50,y:-4,t:"FB"},{x:50,y:-9,t:"RB"},{x:76,y:6.5,t:"TE"},{x:85,y:2.5,t:"WB"},{x:12,y:6.5,t:"WR"} ] },
+  doubleTE:{ name:"Double TE", skill:[ {x:50,y:1,t:"QB"},{x:50,y:-4,t:"FB"},{x:50,y:-9,t:"RB"},{x:24,y:6.5,t:"TE"},{x:76,y:6.5,t:"TE"},{x:90,y:4,t:"WR"} ] },
+  trips:   { name:"Trips",     skill:[ {x:50,y:1,t:"QB"},{x:44,y:-6,t:"RB"},{x:93,y:4,t:"WR"},{x:85,y:8,t:"WR"},{x:78,y:5.5,t:"WR"},{x:9,y:6.5,t:"WR"} ] },
+  spread:  { name:"Spread",    skill:[ {x:50,y:-4,t:"QB"},{x:59,y:-4,t:"RB"},{x:8,y:6.5,t:"WR"},{x:22,y:8,t:"WR"},{x:78,y:8,t:"WR"},{x:92,y:6.5,t:"WR"} ] }
+};
+const OFFENSE_ORDER = ["proI","powerI","doubleTE","trips","spread"];
+
+/* ---------- Position groups for the versatility key ---------- */
+const POS_GROUPS = [
+  {code:"DE", label:"Defensive End"},
+  {code:"DT", label:"Defensive Tackle / Nose"},
+  {code:"LB", label:"Linebacker"},
+  {code:"CB", label:"Cornerback"},
+  {code:"S",  label:"Safety"}
+];
+
+/* ---------- State ---------- */
+const LS_KEY = "cps_youth_def_depthchart_v1";
+const DEFAULT_ROSTER = [
+  "Dylan Alvaro","Connor Gillespie","Kristoffer Edwards Jr","Jacob Lee","Eli Lopez",
+  "Zane Sarmento","Andrew Kornberger","Jaxton Wright","Joseph VANCOEUR-PHILLIPS","Isaias Tirado",
+  "Caleb Delgado","Marcell Dean","Briggs Wegman","Charlie Gibney","Sebastian Chellquist",
+  "Jameson Eppler","Max Merwin","Benjamen Santana","Vincent Smith","Isaac Griffith",
+  "Albert Medoro","Destin Fields"
+];
+const blankSlot = () => ["","",""];
+let state = {
+  roster:[],
+  global:{},          // key -> [starter,b1,b2]
+  overrides:{},       // scheme -> { key -> [starter,b1,b2] }
+  active:"m52",
+  offense:"proI",
+  caps:{}             // playerName -> [group codes]
+};
+
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      const p = JSON.parse(raw);
+      state.roster = Array.isArray(p.roster)?p.roster:[];
+      state.global = p.global||{};
+      state.overrides = p.overrides||{};
+      state.active = SCHEMES[p.active]?p.active:"m52";
+      state.offense = OFFENSE[p.offense]?p.offense:"proI";
+      state.caps = p.caps || {};
+    }else{
+      state.roster = DEFAULT_ROSTER.slice().sort((a,b)=>a.localeCompare(b));
+    }
+  }catch(e){
+    console.warn("load failed",e);
+    state.roster = DEFAULT_ROSTER.slice().sort((a,b)=>a.localeCompare(b));
+  }
+}
+function save(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  catch(e){ console.warn("save failed",e); }
+}
+
+/* ---------- Assignment helpers ---------- */
+function isLocked(scheme,key){
+  return !!(state.overrides[scheme] && state.overrides[scheme][key]);
+}
+function effective(scheme,key){
+  if(isLocked(scheme,key)) return state.overrides[scheme][key];
+  return state.global[key] || blankSlot();
+}
+function setSlot(scheme,key,idx,val){
+  if(isLocked(scheme,key)){
+    const cur = state.overrides[scheme][key].slice();
+    cur[idx]=val;
+    state.overrides[scheme][key]=cur;
+  }else{
+    const cur = (state.global[key]||blankSlot()).slice();
+    cur[idx]=val;
+    state.global[key]=cur;
+  }
+  save();
+}
+function toggleLock(scheme,key,on){
+  if(on){
+    if(!state.overrides[scheme]) state.overrides[scheme]={};
+    // seed override with current effective (the global value) so it starts populated
+    state.overrides[scheme][key] = (state.global[key]||blankSlot()).slice();
+  }else{
+    if(state.overrides[scheme]) delete state.overrides[scheme][key];
+  }
+  save();
+}
+
+/* ---------- Roster ---------- */
+function normalizeName(n){ return n.replace(/\s+/g," ").trim(); }
+function addNames(list){
+  const seen = new Set(state.roster.map(x=>x.toLowerCase()));
+  list.map(normalizeName).filter(Boolean).forEach(n=>{
+    if(!seen.has(n.toLowerCase())){ state.roster.push(n); seen.add(n.toLowerCase()); }
+  });
+  state.roster.sort((a,b)=>a.localeCompare(b));
+  save();
+}
+function removeName(name){
+  state.roster = state.roster.filter(n=>n!==name);
+  if(state.caps[name]) delete state.caps[name];
+  save();
+}
+
+/* ---------- Versatility key helpers ---------- */
+function hasCap(name,code){ return (state.caps[name]||[]).includes(code); }
+function toggleCap(name,code){
+  const arr = state.caps[name] ? state.caps[name].slice() : [];
+  const i = arr.indexOf(code);
+  if(i>=0) arr.splice(i,1); else arr.push(code);
+  const ordered = POS_GROUPS.filter(g=>arr.includes(g.code)).map(g=>g.code);
+  if(ordered.length) state.caps[name]=ordered; else delete state.caps[name];
+  save();
+}
+
+/* ---------- Rendering ---------- */
+const $ = s=>document.querySelector(s);
+
+function renderTabs(){
+  const t = $("#tabs"); t.innerHTML="";
+  SCHEME_ORDER.forEach(id=>{
+    const s = SCHEMES[id];
+    const b = document.createElement("button");
+    b.className = "tab"+(id===state.active?" active":"");
+    b.innerHTML = `${s.name}<small>${s.tag}</small>`;
+    b.onclick = ()=>{ state.active=id; save(); renderAll(); };
+    t.appendChild(b);
+  });
+}
+
+function renderRoster(){
+  $("#rosterCount").textContent = state.roster.length+" player"+(state.roster.length===1?"":"s");
+  const c = $("#chips"); c.innerHTML="";
+  if(state.roster.length===0){
+    c.innerHTML = '<span class="empty">No players yet. Paste your roster above.</span>';
+    return;
+  }
+  state.roster.forEach(n=>{
+    const chip = document.createElement("span");
+    chip.className="chip";
+    chip.innerHTML = `<b></b><span class="x" title="Remove">&times;</span>`;
+    chip.querySelector("b").textContent = n;
+    chip.querySelector(".x").onclick = ()=>{ removeName(n); renderRoster(); renderChart(); renderDiagram(); renderCaps(); };
+    c.appendChild(chip);
+  });
+}
+
+function usedNames(scheme){
+  const set = new Set();
+  SCHEMES[scheme].pos.forEach(p=>{
+    effective(scheme,p.key).forEach(v=>{ if(v) set.add(v); });
+  });
+  return set;
+}
+
+function optionsHTML(selected, used){
+  let html = `<option value=""${selected?"":" selected"}>— choose —</option>`;
+  // union of roster + any currently-selected value not in roster
+  const names = state.roster.slice();
+  if(selected && !names.some(n=>n===selected)) names.push(selected);
+  names.forEach(n=>{
+    if(used && used.has(n) && n!==selected) return; // already picked elsewhere this scheme
+    html += `<option value="${n.replace(/"/g,'&quot;')}"${n===selected?" selected":""}>${n}</option>`;
+  });
+  return html;
+}
+
+function starterConflicts(){
+  // returns Set of position keys whose STARTER name duplicates another starter in the active scheme
+  const scheme = state.active;
+  const byName = {};
+  SCHEMES[scheme].pos.forEach(p=>{
+    const s = effective(scheme,p.key)[0];
+    if(s){ (byName[s]=byName[s]||[]).push(p.key); }
+  });
+  const dupKeys = new Set();
+  Object.values(byName).forEach(keys=>{ if(keys.length>1) keys.forEach(k=>dupKeys.add(k)); });
+  return dupKeys;
+}
+
+function renderChart(){
+  const scheme = state.active, s = SCHEMES[scheme];
+  $("#schemeTitle").textContent = s.name;
+  $("#schemeHint").textContent = s.hint;
+  const dup = starterConflicts();
+  const used = usedNames(scheme);
+  const body = $("#chartBody"); body.innerHTML="";
+  s.pos.forEach(p=>{
+    const val = effective(scheme,p.key);
+    const locked = isLocked(scheme,p.key);
+    const tr = document.createElement("tr");
+    if(locked) tr.className="locked";
+    const conf = dup.has(p.key)?" conflict":"";
+    tr.innerHTML = `
+      <td class="poscell"><span class="abbr">${p.abbr||p.key}</span> ${p.label}</td>
+      <td class="starter"><select data-key="${p.key}" data-idx="0" class="${conf}">${optionsHTML(val[0],used)}</select></td>
+      <td><select data-key="${p.key}" data-idx="1">${optionsHTML(val[1],used)}</select></td>
+      <td><select data-key="${p.key}" data-idx="2">${optionsHTML(val[2],used)}</select></td>
+      <td class="lockcell"><label class="lock"><input type="checkbox" data-lock="${p.key}" ${locked?"checked":""}> lock</label></td>
+    `;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll("select").forEach(sel=>{
+    sel.onchange = ()=>{
+      setSlot(scheme, sel.dataset.key, +sel.dataset.idx, sel.value);
+      renderChart(); renderDiagram();
+    };
+  });
+  body.querySelectorAll("input[data-lock]").forEach(cb=>{
+    cb.onchange = ()=>{
+      toggleLock(scheme, cb.dataset.lock, cb.checked);
+      renderChart(); renderDiagram();
+    };
+  });
+  const note = $("#conflictNote");
+  if(dup.size){
+    note.style.display="block";
+    note.textContent = "⚠ Same player is starting in more than one spot this scheme (highlighted). Fine if intentional, otherwise fix it.";
+  }else{ note.style.display="none"; }
+}
+
+function lastName(name){
+  const suffixes = new Set(["jr","jr.","sr","sr.","ii","iii","iv","v"]);
+  const parts = (name||"").trim().split(/\s+/);
+  let i = parts.length-1;
+  while(i>0 && suffixes.has(parts[i].toLowerCase())) i--;
+  return parts[i]||"";
+}
+function fieldSVG(scheme, forPrint){
+  const s = SCHEMES[scheme];
+  const losColor = forPrint ? "#111" : "#6db4ff";
+  const oColor = forPrint ? "#111" : "rgba(244,247,255,.65)";
+  const dFill = forPrint ? "#111" : "#1a82ff";
+  const dText = forPrint ? "#fff" : "#04122b";
+  const nameColor = forPrint ? "#111" : "#f4f7ff";
+  const gapColor = forPrint ? "#111" : "#6db4ff";
+
+  // players (used by both defense and special teams)
+  const ds = s.pos.map(p=>{
+    const name = effective(scheme,p.key)[0] || "";
+    const short = (name.trim().split(/\s+/)[0]) || "";
+    return `
+      <g>
+        <circle cx="${p.x}" cy="${p.y}" r="3.4" fill="${dFill}"/>
+        <text x="${p.x}" y="${p.y+1.1}" text-anchor="middle" font-size="2.5" font-family="var(--disp)" font-weight="700" fill="${dText}">${p.abbr||p.key}</text>
+        <text x="${p.x}" y="${p.y+6.4}" text-anchor="middle" font-size="2.9" font-family="var(--body)" fill="${nameColor}">${short}</text>
+      </g>`;
+  }).join("");
+
+  // special teams: just the unit, a dashed reference line, no offense/gaps
+  if(s.type === "st"){
+    const gy = (s.guideY != null) ? s.guideY : 20;
+    return `
+      <svg class="field" viewBox="0 -15 100 92" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <line x1="4" y1="${gy}" x2="96" y2="${gy}" stroke="${losColor}" stroke-width="0.6" stroke-dasharray="2.5 2.5"/>
+        <text x="96" y="-11" text-anchor="end" font-size="3.2" font-family="var(--disp)" font-weight="700" fill="${forPrint?'#111':'#8ea3c4'}">${s.name.toUpperCase()}</text>
+        ${ds}
+      </svg>`;
+  }
+
+  // offense: full 11 in the selected formation (square center, position labels, no player names)
+  const off = OFFENSE[state.offense] ? state.offense : "proI";
+  let os = "";
+  OL.forEach(o=>{
+    os += o.sq
+      ? `<rect x="${o.x-2.6}" y="${o.y-2.6}" width="5.2" height="5.2" fill="none" stroke="${oColor}" stroke-width="0.8"/>`
+      : `<circle cx="${o.x}" cy="${o.y}" r="2.6" fill="none" stroke="${oColor}" stroke-width="0.8"/>`;
+    os += `<text x="${o.x}" y="${o.y+0.85}" text-anchor="middle" font-size="2.1" font-family="var(--disp)" font-weight="700" fill="${oColor}">${o.t}</text>`;
+  });
+  OFFENSE[off].skill.forEach(sk=>{
+    os += `<circle cx="${sk.x}" cy="${sk.y}" r="2.6" fill="none" stroke="${oColor}" stroke-width="0.8"/>`;
+    os += `<text x="${sk.x}" y="${sk.y+0.85}" text-anchor="middle" font-size="2.1" font-family="var(--disp)" font-weight="700" fill="${oColor}">${sk.t}</text>`;
+  });
+  return `
+    <svg class="field" viewBox="0 -15 100 92" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <line x1="2" y1="9.5" x2="98" y2="9.5" stroke="${losColor}" stroke-width="0.8"/>
+      <text x="96" y="-11" text-anchor="end" font-size="3.2" font-family="var(--disp)" font-weight="700" fill="${forPrint?'#111':'#8ea3c4'}">OFFENSE: ${OFFENSE[off].name.toUpperCase()}</text>
+      ${GAPS.map(g=>`<text x="${g.x}" y="11.9" text-anchor="middle" font-size="2.8" font-family="var(--disp)" font-weight="700" fill="${gapColor}">${g.t}</text>`).join("")}
+      ${os}
+      ${ds}
+    </svg>`;
+}
+
+function renderDiagram(){
+  const on = $("#showDiagram").checked;
+  const card = $("#diagramCard");
+  const wrap = $("#offenseWrap");
+  if(wrap) wrap.style.display = (SCHEMES[state.active].type==="st") ? "none" : "";
+  card.style.display = on ? "block" : "none";
+  if(on) card.innerHTML = fieldSVG(state.active,false);
+}
+
+function renderCaps(){
+  const t = $("#capBody");
+  if(state.roster.length===0){
+    t.innerHTML = `<tbody><tr><td class="empty" style="padding:10px">Add players in the Roster Manager to tag positions.</td></tr></tbody>`;
+    return;
+  }
+  const head = `<thead><tr><th>Player</th>${POS_GROUPS.map(g=>`<th title="${g.label}">${g.code}</th>`).join("")}</tr></thead>`;
+  const rows = state.roster.map(n=>{
+    const cells = POS_GROUPS.map(g=>{
+      const on = hasCap(n,g.code);
+      const nm = n.replace(/"/g,'&quot;');
+      return `<td class="capcell${on?' on':''}" data-name="${nm}" data-code="${g.code}">${g.code}</td>`;
+    }).join("");
+    return `<tr><td class="capname">${n}</td>${cells}</tr>`;
+  }).join("");
+  t.innerHTML = head + `<tbody>${rows}</tbody>`;
+  t.querySelectorAll(".capcell").forEach(c=>{
+    c.onclick = ()=>{ toggleCap(c.dataset.name, c.dataset.code); renderCaps(); };
+  });
+}
+
+/* ---------- Print ---------- */
+function chartTableHTML(scheme){
+  const s = SCHEMES[scheme];
+  let rows = s.pos.map(p=>{
+    const v = effective(scheme,p.key);
+    return `<tr><td class="pos">${p.abbr||p.key} · ${p.label}</td><td>${v[0]||""}</td><td>${v[1]||""}</td><td>${v[2]||""}</td></tr>`;
+  }).join("");
+  return `
+    <table class="ps">
+      <thead><tr><th>Position</th><th>Starter</th><th>Backup 1</th><th>Backup 2</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+function capLegendHTML(){
+  if(state.roster.length===0) return "";
+  const rows = state.roster.map(n=>{
+    const codes = state.caps[n]||[];
+    return `<tr><td class="pos">${n}</td><td>${codes.length?codes.join(", "):"—"}</td></tr>`;
+  }).join("");
+  return `
+    <div class="ps-page">
+      <div class="ps-head"><h2 class="ps-title">Player Positions &nbsp;<span style="font-size:13px;font-weight:400">Versatility Key</span></h2></div>
+      <table class="ps">
+        <thead><tr><th>Player</th><th>Can Play (DE · DT · LB · CB · S)</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+function buildPrint(schemeIds){
+  const meta = `
+    <div class="ps-meta">
+      <span>Team: </span><span>Opponent: </span><span>Date: </span>
+    </div>`;
+  const offName = (OFFENSE[state.offense]||OFFENSE.proI).name;
+  const html = schemeIds.map(id=>{
+    const s = SCHEMES[id];
+    const sub = (s.type==="st") ? "Special Teams" : `Defensive Depth Chart &nbsp;·&nbsp; vs ${offName}`;
+    return `
+      <div class="ps-page">
+        <div class="ps-head">
+          <h2 class="ps-title">${s.name} &nbsp;<span style="font-size:13px;font-weight:400">${sub}</span></h2>
+          ${meta}
+        </div>
+        ${chartTableHTML(id)}
+        <div class="ps-field">${fieldSVG(id,true)}</div>
+      </div>`;
+  }).join("");
+  $("#printSheet").innerHTML = html + capLegendHTML();
+}
+function doPrint(ids){
+  buildPrint(ids);
+  window.print();
+}
+
+/* ---------- Wire up ---------- */
+function renderAll(){ renderTabs(); renderRoster(); renderChart(); renderDiagram(); renderCaps(); }
+
+function init(){
+  load();
+  renderAll();
+
+  $("#loadBulk").onclick = ()=>{
+    const raw = $("#bulkNames").value;
+    const parts = raw.split(/[\n,;]+/);
+    addNames(parts);
+    $("#bulkNames").value="";
+    renderRoster(); renderChart(); renderDiagram(); renderCaps();
+  };
+  $("#clearBulk").onclick = ()=>{ $("#bulkNames").value=""; };
+  $("#addSingle").onclick = ()=>{
+    const v = $("#singleName").value;
+    if(v.trim()){ addNames([v]); $("#singleName").value=""; renderRoster(); renderChart(); renderDiagram(); renderCaps(); }
+  };
+  $("#singleName").addEventListener("keydown",e=>{ if(e.key==="Enter"){ $("#addSingle").click(); }});
+  $("#wipeRoster").onclick = ()=>{
+    if(confirm("Remove ALL players from the roster? Assignments stay but their dropdowns will show blank.")){
+      state.roster=[]; state.caps={}; save(); renderRoster(); renderChart(); renderDiagram(); renderCaps();
+    }
+  };
+  $("#showDiagram").onchange = renderDiagram;
+
+  // Offense formation picker
+  const offSel = $("#offenseSel");
+  offSel.innerHTML = OFFENSE_ORDER.map(id=>`<option value="${id}">${OFFENSE[id].name}</option>`).join("");
+  offSel.value = state.offense;
+  offSel.onchange = ()=>{ state.offense = offSel.value; save(); renderDiagram(); };
+
+  $("#printOne").onclick = ()=>doPrint([state.active]);
+  $("#printAll").onclick = ()=>doPrint(SCHEME_ORDER);
+  $("#resetAssign").onclick = ()=>{
+    if(confirm("Clear every player assignment across all schemes? Roster is kept.")){
+      state.global={}; state.overrides={}; save(); renderChart(); renderDiagram();
+    }
+  };
+  window.addEventListener("afterprint",()=>{ $("#printSheet").innerHTML=""; });
+}
+init();
+</script>
+</body>
+</html>
