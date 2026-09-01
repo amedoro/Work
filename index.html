@@ -415,6 +415,7 @@ const DEF_GROUPS = [
 const OFF_GROUPS = [
   {code:"QB", label:"Quarterback"},
   {code:"RB", label:"Running Back"},
+  {code:"C",  label:"Center"},
   {code:"G",  label:"Guard"},
   {code:"T",  label:"Tackle"},
   {code:"TE", label:"Tight End"},
@@ -475,7 +476,12 @@ const TEAM_DEFAULTS = {
     KO_L5:["Connor Gillespie","",""], KO_L4:["Caleb Delgado","",""], KO_L3:["Dylan Alvaro","",""],
     KO_L2:["Eli Lopez","",""],        KO_L1:["Jameson Eppler","",""], KO_K: ["Charlie Gibney","",""],
     KO_R1:["Isaias Tirado","",""],    KO_R2:["Briggs Wegman","",""],  KO_R3:["Benjamen Santana","",""],
-    KO_R4:["Jacob Lee","",""],        KO_R5:["Marcell Dean","",""]
+    KO_R4:["Jacob Lee","",""],        KO_R5:["Marcell Dean","",""],
+    // Kick return (5 front · 4 wall · 2 deep)
+    KR_F1:["Connor Gillespie","",""], KR_F2:["Charlie Gibney","",""],  KR_F3:["Jacob Lee","",""],
+    KR_F4:["Jameson Eppler","",""],   KR_F5:["Briggs Wegman","",""],
+    KR_W1:["Marcell Dean","",""],     KR_W2:["Eli Lopez","",""],       KR_W3:["Isaias Tirado","",""],
+    KR_W4:["Benjamen Santana","",""], KR_DL:["Caleb Delgado","",""],   KR_DR:["Dylan Alvaro","",""]
   },
   overrides: {
     m52:{ RLB:["Marcell Dean","",""] },
@@ -504,7 +510,7 @@ const TEAM_DEFAULTS = {
     "Marcell Dean":             ["DE","DT","LB","RB","TE"],
     "Max Merwin":               ["DT","T"],
     "Sebastian Chellquist":     ["DE","DT","G"],
-    "Vincent Smith":            ["G","T"],
+    "Vincent Smith":            ["C"],
     "Zane Sarmento":            ["DE","TE"]
   },
   offense: "proI"
@@ -841,7 +847,7 @@ function capLegendHTML(){
     <div class="ps-page">
       <div class="ps-head"><h2 class="ps-title">Player Positions &nbsp;<span style="font-size:13px;font-weight:400">Versatility Key</span></h2></div>
       <table class="ps">
-        <thead><tr><th>Player</th><th>Defense (DE · DT · LB · CB · S)</th><th>Offense (QB · RB · G · T · TE · WR)</th></tr></thead>
+        <thead><tr><th>Player</th><th>Defense (DE · DT · LB · CB · S)</th><th>Offense (QB · RB · C · G · T · TE · WR)</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
