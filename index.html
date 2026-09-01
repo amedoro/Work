@@ -424,14 +424,46 @@ const blankSlot = () => ["","",""];
    Scheme ids: m52 (5-2), g63 (6-3), d53 (5-3), d44 (4-4), ko (kickoff), kr (kick return). */
 const TEAM_DEFAULTS = {
   roster: DEFAULT_ROSTER.slice(),
+  // 4-4 lineup lives in global so it carries into every scheme sharing these
+  // position keys (D-line, Mike, Will, corners, safety). Fill overrides below
+  // when a scheme uses a different player at a shared spot.
   global: {
-    // LE:["Dylan Alvaro","Jacob Lee",""],
+    LE:  ["Briggs Wegman",       "Destin Fields",              ""],
+    LT:  ["Kristoffer Edwards Jr","Isaias Tirado",             ""],
+    RT:  ["Andrew Kornberger",   "Joseph VANCOEUR-PHILLIPS",   ""],
+    RE:  ["Zane Sarmento",       "Jaxton Wright",              ""],
+    LOLB:["Charlie Gibney",      "",                           ""],
+    MLB: ["Marcell Dean",        "",                           ""],
+    RLB: ["Isaac Griffith",      "",                           ""],
+    ROLB:["Dylan Alvaro",        "",                           ""],
+    LCB: ["Jacob Lee",           "Jameson Eppler",             ""],
+    RCB: ["Eli Lopez",           "Benjamen Santana",           ""],
+    FS:  ["Connor Gillespie",    "Caleb Delgado",              ""]
   },
   overrides: {
     // g63:{ NG:["Marcell Dean","",""] },
   },
   caps: {
-    // "Dylan Alvaro":["DE","LB"],
+    "Andrew Kornberger":        ["DT"],
+    "Benjamen Santana":         ["CB","S"],
+    "Briggs Wegman":            ["DE"],
+    "Caleb Delgado":            ["CB","S"],
+    "Charlie Gibney":           ["DE","LB"],
+    "Connor Gillespie":         ["LB","S"],
+    "Destin Fields":            ["DE"],
+    "Dylan Alvaro":             ["LB"],
+    "Eli Lopez":                ["CB","S"],
+    "Isaac Griffith":           ["DT","LB"],
+    "Isaias Tirado":            ["DE","CB"],
+    "Jacob Lee":                ["CB","S"],
+    "Jameson Eppler":           ["CB","S"],
+    "Jaxton Wright":            ["DT"],
+    "Joseph VANCOEUR-PHILLIPS": ["DT"],
+    "Kristoffer Edwards Jr":    ["DT"],
+    "Marcell Dean":             ["DE","DT","LB"],
+    "Max Merwin":               ["DT"],
+    "Sebastian Chellquist":     ["DE","DT"],
+    "Zane Sarmento":            ["DE"]
   },
   offense: "proI"
 };
