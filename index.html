@@ -362,22 +362,22 @@ const SCHEMES = {
   },
   kr:{
     name:"Kick Return",
-    tag:"Return team · 11",
+    tag:"Return team · 5-4-2",
     type:"st",
     guideY:16,
-    hint:"Return unit. Front line meets the coverage, mid wall sets up the wedge, and the deep returner brings it out. Everyone blocks their man and walls to one side.",
+    hint:"Return unit — 5 up front, 4 in the wall, 2 deep. Front line meets the coverage, the wall sets up the return, and the two deep backs bring it out. Everyone blocks their man and walls to one side.",
     pos:[
       {key:"KR_F1", abbr:"F1", label:"Front 1", x:15, y:24},
       {key:"KR_F2", abbr:"F2", label:"Front 2", x:32, y:24},
       {key:"KR_F3", abbr:"F3", label:"Front 3", x:50, y:24},
       {key:"KR_F4", abbr:"F4", label:"Front 4", x:68, y:24},
       {key:"KR_F5", abbr:"F5", label:"Front 5", x:85, y:24},
-      {key:"KR_M1", abbr:"M1", label:"Mid 1",   x:28, y:42},
-      {key:"KR_M2", abbr:"M2", label:"Mid 2",   x:50, y:42},
-      {key:"KR_M3", abbr:"M3", label:"Mid 3",   x:72, y:42},
-      {key:"KR_U1", abbr:"U1", label:"Setup 1", x:40, y:56},
-      {key:"KR_U2", abbr:"U2", label:"Setup 2", x:60, y:56},
-      {key:"KR_KR", abbr:"KR", label:"Returner",x:50, y:70}
+      {key:"KR_W1", abbr:"W1", label:"Wall 1",  x:20, y:42},
+      {key:"KR_W2", abbr:"W2", label:"Wall 2",  x:40, y:42},
+      {key:"KR_W3", abbr:"W3", label:"Wall 3",  x:60, y:42},
+      {key:"KR_W4", abbr:"W4", label:"Wall 4",  x:80, y:42},
+      {key:"KR_DL", abbr:"DL", label:"Deep Left",  x:38, y:62},
+      {key:"KR_DR", abbr:"DR", label:"Deep Right", x:62, y:62}
     ]
   }
 };
@@ -448,46 +448,64 @@ const blankSlot = () => ["","",""];
    Scheme ids: m52 (5-2), g63 (6-3), d53 (5-3), d44 (4-4), ko (kickoff), kr (kick return). */
 const TEAM_DEFAULTS = {
   roster: DEFAULT_ROSTER.slice(),
-  // 4-4 lineup lives in global so it carries into every scheme sharing these
-  // position keys (D-line, Mike, Will, corners, safety). Fill overrides below
-  // when a scheme uses a different player at a shared spot.
+  // global = the shared base for a position key across every scheme that uses it.
+  // Positions that DIFFER by scheme (the LB spots, 6-3 right corner) are set per
+  // scheme in `overrides` below. Kickoff spots (KO_*) are unique to that unit.
   global: {
-    LE:  ["Briggs Wegman",       "Destin Fields",              ""],
-    LT:  ["Kristoffer Edwards Jr","Isaias Tirado",             ""],
-    RT:  ["Andrew Kornberger",   "Joseph VANCOEUR-PHILLIPS",   ""],
-    RE:  ["Zane Sarmento",       "Jaxton Wright",              ""],
-    LOLB:["Charlie Gibney",      "",                           ""],
-    MLB: ["Marcell Dean",        "",                           ""],
-    RLB: ["Isaac Griffith",      "",                           ""],
-    ROLB:["Dylan Alvaro",        "",                           ""],
-    LCB: ["Jacob Lee",           "Jameson Eppler",             ""],
-    RCB: ["Eli Lopez",           "Benjamen Santana",           ""],
-    FS:  ["Connor Gillespie",    "Caleb Delgado",              ""]
+    // Defensive line (same across 5-2 / 6-3 / 5-3 / 4-4)
+    LE:  ["Briggs Wegman",       "Destin Fields",            ""],
+    LT:  ["Kristoffer Edwards Jr","Isaias Tirado",           ""],
+    RT:  ["Andrew Kornberger",   "Joseph VANCOEUR-PHILLIPS", ""],
+    RE:  ["Zane Sarmento",       "Jaxton Wright",            ""],
+    NG:  ["Isaac Griffith",      "",                         ""],  // 5-2 / 5-3 nose
+    LG:  ["Isaac Griffith",      "",                         ""],  // 6-3 left guard
+    RG:  ["Marcell Dean",        "",                         ""],  // 6-3 right guard
+    // Linebackers — base values; scheme differences handled in overrides
+    LLB: ["Charlie Gibney",      "",                         ""],
+    MLB: ["Marcell Dean",        "",                         ""],  // 4-4 Mike (6-3 override)
+    RLB: ["Isaac Griffith",      "",                         ""],  // 4-4 Will (5-2 / 6-3 override)
+    M:   ["Dylan Alvaro",        "",                         ""],  // 5-2 Monster
+    LOLB:["Charlie Gibney",      "",                         ""],  // 4-4 only
+    ROLB:["Dylan Alvaro",        "",                         ""],  // 4-4 only
+    // Secondary
+    LCB: ["Jacob Lee",           "Jameson Eppler",           ""],
+    RCB: ["Eli Lopez",           "Benjamen Santana",         ""],  // 6-3 override
+    FS:  ["Connor Gillespie",    "Caleb Delgado",            ""],
+    // Kickoff coverage (5 left · K · 5 right)
+    KO_L5:["Connor Gillespie","",""], KO_L4:["Caleb Delgado","",""], KO_L3:["Dylan Alvaro","",""],
+    KO_L2:["Eli Lopez","",""],        KO_L1:["Jameson Eppler","",""], KO_K: ["Charlie Gibney","",""],
+    KO_R1:["Isaias Tirado","",""],    KO_R2:["Briggs Wegman","",""],  KO_R3:["Benjamen Santana","",""],
+    KO_R4:["Jacob Lee","",""],        KO_R5:["Marcell Dean","",""]
   },
   overrides: {
-    // g63:{ NG:["Marcell Dean","",""] },
+    m52:{ RLB:["Marcell Dean","",""] },
+    g63:{ MLB:["Dylan Alvaro","",""], RLB:["Caleb Delgado","",""], RCB:["Connor Gillespie","Benjamen Santana",""] }
   },
+  // caps = versatility grid, defense codes then offense codes per player
+  //   DEF: DE DT LB CB S   ·   OFF: QB RB G T TE WR
   caps: {
-    "Andrew Kornberger":        ["DT"],
-    "Benjamen Santana":         ["CB","S"],
-    "Briggs Wegman":            ["DE"],
-    "Caleb Delgado":            ["CB","S"],
-    "Charlie Gibney":           ["DE","LB"],
-    "Connor Gillespie":         ["LB","S"],
-    "Destin Fields":            ["DE"],
-    "Dylan Alvaro":             ["LB"],
+    "Albert Medoro":            ["QB"],
+    "Andrew Kornberger":        ["DT","G"],
+    "Benjamen Santana":         ["CB","S","WR"],
+    "Briggs Wegman":            ["DE","TE"],
+    "Caleb Delgado":            ["CB","S","RB"],
+    "Charlie Gibney":           ["DE","LB","RB"],
+    "Connor Gillespie":         ["LB","S","QB"],
+    "Destin Fields":            ["DE","TE","WR"],
+    "Dylan Alvaro":             ["LB","RB"],
     "Eli Lopez":                ["CB","S"],
-    "Isaac Griffith":           ["DT","LB"],
-    "Isaias Tirado":            ["DE","CB"],
+    "Isaac Griffith":           ["DT","LB","T"],
+    "Isaias Tirado":            ["DE","CB","WR"],
     "Jacob Lee":                ["CB","S"],
     "Jameson Eppler":           ["CB","S"],
-    "Jaxton Wright":            ["DT"],
-    "Joseph VANCOEUR-PHILLIPS": ["DT"],
-    "Kristoffer Edwards Jr":    ["DT"],
-    "Marcell Dean":             ["DE","DT","LB"],
-    "Max Merwin":               ["DT"],
-    "Sebastian Chellquist":     ["DE","DT"],
-    "Zane Sarmento":            ["DE"]
+    "Jaxton Wright":            ["DT","G"],
+    "Joseph VANCOEUR-PHILLIPS": ["DT","G"],
+    "Kristoffer Edwards Jr":    ["DT","G"],
+    "Marcell Dean":             ["DE","DT","LB","RB","TE"],
+    "Max Merwin":               ["DT","T"],
+    "Sebastian Chellquist":     ["DE","DT","G"],
+    "Vincent Smith":            ["G","T"],
+    "Zane Sarmento":            ["DE","TE"]
   },
   offense: "proI"
 };
